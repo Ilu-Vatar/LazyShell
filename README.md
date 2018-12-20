@@ -5,6 +5,9 @@ I'm valar/Ilu-Vatar (a lot of references to the Lord of the Rings),
 and I'm glad to present you this terminal-like program that has benn made
 for lazy people (like me ;-] ).
 
+To run lazyshell or the install program, you will need python and python3
+If you want to make things go faster, install nmap (apt install nmap) and net-tools (apt install net-tools)
+
 
  {What's in here ?}
 [1] Install
