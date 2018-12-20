@@ -1,3 +1,0 @@
-#!/bin/bash
-rm -rf /media/root/My\ Passport/python
-cp -r /root/python /media/root/My\ Passport
