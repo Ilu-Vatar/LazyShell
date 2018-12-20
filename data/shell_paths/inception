@@ -1,0 +1,3 @@
+#!/bin/bash
+python /opt/lazyshell/lazyshell.py
+echo "don't fall into the Limbo"
