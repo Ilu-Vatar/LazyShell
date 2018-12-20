@@ -1,4 +1,10 @@
  --- { LAZYSHELL } ---
+ 
+Lazyshell is a project which started in October 2018.
+I'm valar/Ilu-Vatar (a lot of references to the Lord of the Rings),
+and I'm glad to present you this terminal-like program that has benn made
+for lazy people (like me ;-] ).
+
 
  {What's in here ?}
 [1] Install
