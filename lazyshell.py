@@ -71,7 +71,7 @@ info = '''\033[1;30m
             {~} A Terminal for Lazy people (by lazy people) {~}
             {~}               Version 0.2.3                 {~}
             {~}     Created by: N******* R****** (Valar)    {~}
-            {~}            My Github: github                {~}
+            {~}           My Github: Ilu-Vatar              {~}
             {~}          My Discord: neo#xxxx               {~}
             {~}         Type "help" to get some             {~}
             {~} ------------------------------------------- {~}
