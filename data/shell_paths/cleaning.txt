@@ -1,2 +1,0 @@
-sudormdir /root/hack
-cd /root
