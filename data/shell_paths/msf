@@ -1,5 +1,0 @@
-#!/bin/bash
-echo starting postgresql ...
-service postgresql start
-echo starting metasploit framework
-msfconsole
