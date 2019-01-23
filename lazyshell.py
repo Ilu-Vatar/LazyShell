@@ -1,12 +1,16 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
 ################################################################################
 # Lazyshell
 import os, shutil, glob, importlib, time, string, platform, zipfile
-import socket, threading, sys, random
+import socket, threading, sys, random, traceback, subprocess
+from datetime import datetime
 from terminaltables import DoubleTable
 import banner
 
 ################################################################################
 # variables
+version='0.2.7'
 user = open('/opt/lazyshell/data/files/user.txt','r').read()
 user = user.replace('\n','')
 starting_path = os.getcwd()
@@ -70,16 +74,14 @@ open('/opt/lazyshell/data/files/show.txt','w').write('0')
 if system != 'windows': os.system('clear') # linux and osx
 else: os.system('cls') # windows
 wonder = banner.header()
-info = '''\033[1;30m
-            {~} A Terminal for Lazy people (by lazy people) {~}
-            {~}               Version 0.2.3                 {~}
-            {~}     Created by: N******* R****** (Valar)    {~}
+info = '''\033[1;30m            {~} A Terminal for Lazy people (by lazy people) {~}
+            {~}               Version %s                 {~}
+            {~}        Created by: Valar/Ilu-Vatar          {~}
             {~}           My Github: Ilu-Vatar              {~}
             {~}          My Discord: neo#8489               {~}
             {~}         Type "help" to get some             {~}
             {~} ------------------------------------------- {~}
-   \033[1;m
-'''
+\033[1;m''' % version
 print(wonder+info)
 
 ################################################################################
@@ -108,10 +110,11 @@ com_list =['about'
            ,'newcatego'
            
            ,'ip'
+           ,'scan'
+           ,'portscan'
            ,'config'
            ,'connect'
            ,'server'
-           ,'scan'
            ,'udpflood'
            
            ,'newcatego'
@@ -123,7 +126,8 @@ com_list =['about'
            ,'exec'
            
            ,'newcatego'
-           
+
+           ,'version'
            ,'wait'
            ,'py2shell'
            ,'py3shell'
@@ -154,7 +158,7 @@ def error(errcode, com):
     elif errcode == 'IndexError':
         if len(com) == 1: print('\\?/ Syntax Error : No Options Given')
         else: print('\\?/ Syntax Error : Missing or Too Much Options')
-    elif errcode == 'TooMuchArguments': print('/!\\ Too much arguments given')
+    elif errcode == 'ArgumentError': print('/!\\ Too much arguments given')
     elif errcode == 'WrongOption': print('\\?/ Not existing option chosen')
     elif errcode == 'ShortcutNotFound': print('/!\\ The Shortcut '+com[0]+' has not been found')
     elif errcode == 'InvalidName': print('/!\\ Invalid Name : '+com[0])
@@ -197,9 +201,12 @@ def com_descript(com):
     if com == 'py3shell': return 'Open a python 3.6.7 shell'
     if com == 'about': return 'Tells you more about the "lazyshell" project'
     if com == 'wonderful': return 'Shows you a wonderful thing'
-    if com == 'scan': return 'Scans your network'
+    if com == 'scan': return 'Scan of your network'
     if com == 'udpflood': return 'Down a target using UDP' # flood: fr. inonder
     if com == 'config': return 'Config your interface and gateway'
+    if com == 'portscan': return 'Scans a target for open ports'
+    if com == 'version': return 'Gives the LazyShell verion'
+    #if com == 'proxy': return 'Create a proxy-server'
 
     if com == 'exit': return 'exit the lazyshell'
     if com == 'help': return 'show this help window'
@@ -229,8 +236,8 @@ def com_syntax(com):
     if com == 'load_paths': return 'load_paths'
     if com == 'extract': return 'extract [file] [option] [password(optional)]'
     if com == 'show_sc': return 'show_sc'
-    if com == 'connect': return 'connect [IP] [port] [protocol]'
-    if com == 'server': return 'server [protocol] [bind-IP] [port] [max-clients]'
+    if com == 'connect': return 'connect [IP] [port] [protocol] [advanced] [additional]'
+    if com == 'server': return 'server [protocol] [bind-IP] [port] [clients] [type(purpose)] [additional]'
     if com == 'ip': return 'ip'
     if com == 'ren': return 'ren [file] [newfile]'
     if com == 'while_true': return 'while_true [command]'
@@ -239,8 +246,11 @@ def com_syntax(com):
     if com == 'about': return 'about'
     if com == 'wonderful': return 'wonderful'
     if com == 'scan': return 'scan'
-    if com == 'udpflood': return 'udpflood [IP] [port] [packet-size (optional)]'
+    if com == 'udpflood': return 'udpflood [IP] [port] [packet-size(optional)]'
     if com == 'config': return 'config'
+    if com == 'portscan': return 'portscan [targetIP] [port-range(optional)]'
+    if com == 'verion': return 'version'
+    #if com == 'proxy': return 'proxy [localhost] [localport] [remotehost] [remoteport] [receive_first]'
 
     if com == 'exit': return 'exit'
     if com == 'help': return 'help [option]'
@@ -261,10 +271,25 @@ def options(com):
         print('name >> only ascii letters and numbers (no extension)')
     elif com == 'connect':
         print('protocol >> TCP, UDP')
+        print('adv >>> base (by default), send_spread(only sending data to spreader server),'+
+              '\n   recv_spread(only receiving data from spreader server')
+        print('advanced auto_ex mode >> give the path (add it after "auto_ex") to a text_file\n'+
+              ' and sends all the values in it to specified server.\n'+
+              ' As last argument, you can add a sleep time between each request if same as before (in seconds)')
     elif com == 'server':
         print('protocol >> TCP, UDP')
         print('max-clients >> n (e.g. 3)')
         print('Bind-IP is set to default (which is 0.0.0.0) if == "df"')
+        print('type >>> com(communication), spreader(spreads received info to every client,'+
+              '\n   infospread(acts like a spreder)')
+        print('infospread >> you can add a python program/script that will handle the data (please handle empty data)\n'+
+              ' as the first argument. All the arguments that follow can be specified after the script_path'+
+              '\n If your script gives any output, it will be printed'+
+              '\n e.g. server TCP df 5201 infospread /folder/handler.py (here comes the data as argument (str)) arg1 arg2')
+    #elif com == 'proxy':
+        #print('receive-first >>> True, False')
+    elif com == 'portscan':
+        print('if no port-range is specified, it is equal to 1024')
     else: print('No more data about this')
 
 def change_dir(com):
@@ -296,7 +321,7 @@ def scan_paths():
 
 def execute(com):
     global shortcuts
-##    if len(com) != 1: return error('TooMuchArguments',list(com[0]))
+##    if len(com) != 1: return error('ArgumentError',list(com[0]))
     for shortcut in shortcuts:
         if com[0] == shortcut:
             com = shortcut
@@ -365,28 +390,6 @@ def extract(com):
         print('rarfile extraction missing')
         return None
 
-def handle_client(addr,client_socket):
-    # print out what client sends
-    request = client_socket.recv(1024)
-    print('[*] From %s: %d' % (addr[0], addr[1]))
-    print('[*] Received %s' % request)
-    wtd = input('''[1] Answer
-[2] Nothing
-[3] Stop Server
->>> ''')
-    if wtd == '1':
-        # send back a packet
-        client_socket.send(str.encode(input('Send back: ')))
-        client_socket.close()
-    elif wtd == '2':
-        client_socket.send(str.encode(''))
-        client_socket.close()
-    elif wtd == '3':
-        return False
-    else:
-        print('Invalid Option')
-    return True
-
 def config_network():
     global iface
     iface = open('/opt/lazyshell/data/files/iface.txt').read()
@@ -423,6 +426,100 @@ def auto_config_network():
     n_ip = os.popen("hostname -I").read() # Local IP address
     n_host = os.popen("hostname").read() # hostname
 
+# TCP COM
+def com_client_thread(connection, ip, port, max_buffer_size = 5120):
+    try:
+        is_active = True
+        while is_active:
+            request = receive_input(connection, max_buffer_size)
+
+            if '--exit--' in request:
+                print('[!!] Client is requesting to quit.')
+                connection.close()
+                print('[*] Connection '+ip+':'+port+'closed')
+                is_active = False
+            else:
+                print('[*] From {ip}, {port}: {r}'.format(ip=ip,port=port,r=request))
+                connection.sendall('-'.encode('utf8'))
+    except ConnectionResetError:
+        print('ConnectionResetError occured. Closed client socket?')
+    except KeyboardInterrupt:
+        print('Keyboard Interrupt. Stopping Thread')
+        threading.Thread.stop()
+# universal
+def receive_input(connection, max_buffer_size):
+    client_input = connection.recv(max_buffer_size)
+    client_input_size = sys.getsizeof(client_input)
+
+    if client_input_size > max_buffer_size:
+        print("The input size is greater than expected {}".format(client_input_size))
+
+    decoded_input = client_input.decode('utf8').rstrip() # le rstrip est la pr les \n je crois
+
+    return decoded_input
+
+# TCP SPREADER
+def spread_client_thread(connection, ip, port, max_buffer_size = 5120):
+    global client_list
+    is_active = True
+    while is_active:
+        request = receive_input(connection, max_buffer_size)
+
+        if '--exit--' in request:
+            print('[!!] Client is requesting to quit.')
+            connection.close()
+            print('[*] Connection '+ip+':'+port+'closed')
+            is_active = False
+        elif request != '':
+            print('[R] From {ip}, {port}: {r}'.format(ip=ip,port=port,r=request))
+            for client in client_list:
+                print('[S] Sending to client '+str(client_list.index(client)))
+                connection.sendall(request.encode('utf8'))
+        else:
+            pass
+
+def infospread_client_thread(connection, ip, port, script, args, max_buffer_size = 5120):
+    global client_list, infospread_data
+    is_active = True
+    while is_active:
+        request = infospread_receive_input(connection, max_buffer_size)
+        infospread_data = request
+
+        # Script output
+        if system == 'linux': output = os.popen('python3 {s} "{data}" {a}'.format(s=script,data=infospread_data,a=args)).read()
+        if system == 'windows': output = os.popen('py {s} "{data}" {a}'.format(s=script,data=infospread_data,a=args)).read()
+        if output != '': print('Output of Script: '+output)
+
+        # Closing Client-Socket
+        if '--exit--' in request:
+            print('[!!] Client is requesting to quit.')
+            connection.close()
+            print('[*] Connection '+ip+':'+port+'closed')
+            is_active = False
+
+        # Spreading data
+        elif request != '':
+            print('[*] Got data from {ip}, {port} of size {size}'.format(ip=ip,port=port,size=sys.getsizeof(request)))
+            for client in client_list:
+                print('Sending data to client number '+str(client_list.index(client)))
+                client.sendall(request.encode('utf8'))
+            print('[*] Spread finished')
+        else:
+            pass
+
+def infospread_receive_input(connection, max_buffer_size):
+    global infospread_data
+    client_input = connection.recv(max_buffer_size)
+    client_input_size = sys.getsizeof(client_input)
+
+    if client_input_size > max_buffer_size:
+        print("The input size is greater than expected {}".format(client_input_size))
+
+    decoded_input = client_input.decode('utf8').rstrip() # le rstrip est la pr les \n je crois
+
+    return decoded_input
+
+
 
 
 ################################################################################
@@ -455,7 +552,7 @@ while 'newcatego' in com_list: del com_list[com_list.index('newcatego')]
 ################################################################################
 # interpreter
 def interpreter(com): # faut encore faire le nombre d'args par commande, sinn error
-    global user, lvl, shortcuts, shell_list, shell_paths
+    global version, user, lvl, shortcuts, shell_list, shell_paths, client_list, infospread_data
     if com=='exit': quit()
     if com=='': return None
     if ' & ' in com and not '&&' in com:
@@ -512,15 +609,15 @@ SYSTEM
 OTHER\n''']]
                 table = DoubleTable(table_data)
                 print('\033[1;36m'+table.table+Finish)
-                print(Green+'\n[+] Type "help" + \'category\' to get the commands from the specified category\n'+Finish)
+                print(Green+'[+] Type "help" + \'category\' to get the commands from the specified category\n'+Finish)
             elif com[1].lower() in catego_dict and len(com) == 2:
                 s=''
                 for command in catego_dict[com[1].lower()]:
                     s+='\n\n'+command
                 table_data = [['\n\n{}\n'.format(com[1].upper()),s+'\n']]
                 table = DoubleTable(table_data)
-                print('\n'+BrokenYellow+table.table+Finish+'\n')
-                print(Green+'\n[+] Type "help" + \'command\' to get the commands from the specified category\n'+Finish)
+                print('\n'+BrokenYellow+table.table+Finish)
+                print(Green+'[+] Type "help" + \'command\' to get the commands from the specified category\n'+Finish)
             elif com[1] == '--syntax':
                 print('All Avalaible Commands (syntax) :')
                 for command in com_list:
@@ -540,10 +637,12 @@ OTHER\n''']]
             else:
                 raise IndexError
 
-
         # write from here new commands
+        elif com[0] == 'version':
+            if len(com) == 1: return print('Version: '+version)
+            else: return error('ArgumentError',com)
         elif com[0] == 'wonderful':
-            print(wonder)
+            print(banner.header())
         elif com[0] == 'about':
             print(
                 '''
@@ -579,6 +678,37 @@ I hope you enjoy it
         elif com[0] == 'ren':
             os.rename(com[1], com[2])
         # network
+        elif com[0] == 'portscan':
+            targetIP = com[1]
+            try:
+                port_range = int(com[2])
+            except IndexError:
+                port_range = 1024
+                # Print that gonna scan ... blablabla
+            print('-'*60,'\nScanning for {}'.format(targetIP),'\n'+'-'*60)
+            # Set time value
+            t1 = datetime.now()
+            try:
+                for port in range(1,port_range+1): # from port 1 to 1024
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                    result = sock.connect_ex((targetIP, port))
+                    if result == 0:
+                        print('Port {}: Open'.format(port))
+                    sock.close()
+            except KeyboardInterrupt:
+                prit('Stopping ...')
+                sock.close()
+                return None
+            except socket.gaierror:
+                print('Hostname could not be resolved. Exiting')
+                sys.exit()
+            except socket.error:
+                print('Couldn\'t connect to server')
+                return None
+            # Return the time
+            t2 = datetime.now()
+            print('Scanning completed in: {}'.format(t2-t1))
+            return None
         elif com[0] == 'udpflood':
             if len(com) == 3: size = 1024
             elif len(com) == 4: size = int(com[3])
@@ -593,8 +723,7 @@ I hope you enjoy it
                 if sent % 100 == 0: print('Sent %s amount of packets to %s at port %s' % (sent,ip,port))
                 sent += 1
         elif com[0] == 'config':
-            print('Configuration of your Network\n')
-            wtd = input('[1] manually\n[2] automatic\n>>> ')
+            wtd = input('Configuration of your Network\n[1] manually\n[2] automatic\n>>> ')
             if wtd == '1':
                 open('/opt/lazyshell/data/files/iface.txt','w').write(input('Interface: '))
                 open('/opt/lazyshell/data/files/gateway.txt','w').write(input('Gateway: '))
@@ -616,51 +745,145 @@ I hope you enjoy it
 			    [devices, devices_mac, devices_name]
 			]
             table = DoubleTable(table_data)
-
             # Show devices found on your network
             print("\n\033[1;36m ------ [ Devices found on your network ] ------ \n\033[1;m")
             print(table.table)
         elif com[0] == 'server':
             if com[1].lower() == 'tcp':
-                bind_port = int(com[3])
                 bind_ip = com[2]
+                bind_port = int(com[3])
                 if com[2] == 'df': bind_ip = '0.0.0.0'
                 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                server.bind((bind_ip, bind_port))
+                server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                print('Socket created.')
+                try:
+                    server.bind((bind_ip, bind_port))
+                except:
+                    return print("Bind failed. Error : " + str(sys.exc_info()))
                 server.listen(int(com[4]))
-                while True:
-                    client,addr = server.accept()
-                    print('[*] Accepted connection from %s: %d' % (addr[0],addr[1]))
-                    if not handle_client(addr,client): break
-##                    client_handler = threading.Thread(target=handle_client, args=(addr,client,))
-##                    client_handler.start()
+                print('Listening for clients ...')
+                server_info = '{protocol} {ip} {port} {serv_type}'.format(protocol=com[1],ip=bind_ip,port=bind_port,serv_type=com[5])
+                print(server_info)
+                client_list = []
+                if com[5] == 'com':
+                    while True:
+                        client,addr = server.accept()
+                        print('[*] Accepted connection from %s: %d' % (addr[0],addr[1]))
+                        client.sendall(server_info.encode('utf8'))
+                        try:
+                            threading.Thread(target=com_client_thread, args=(client,addr[0],addr[1])).start()
+                        except:
+                            print('Thread did not start.')
+                            traceback.print_exc()
+                    server.close()
+                    return None
+                elif com[5] == 'spreader':
+                    while True:
+                        client,addr = server.accept()
+                        client_list.append(client)
+                        print('[*] Accepted connection from %s: %d' % (addr[0],addr[1]))
+                        client.sendall(server_info.encode('utf8'))
+                        try:
+                            threading.Thread(target=spread_client_thread, args=(client,addr[0],addr[1])).start()
+                        except:
+                            print('Thread did not start.')
+                            traceback.print_exc()
+
+                    server.close()
+                elif com[5] == 'infospread':
+                    script = com[6]
+                    infospread_data = server_info
+                    try:
+                        args = ''
+                        for arg in com[7:]: args+=arg+' '
+                    except IndexError: args = ''
+                    while True:
+                        client,addr = server.accept()
+                        client_list.append(client)
+                        print('[*] Accepted connection from %s: %d' % (addr[0],addr[1]))
+                        client.sendall(server_info.encode('utf8'))
+                        try:
+                            threading.Thread(target=infospread_client_thread, args=(client,addr[0],addr[1],script,args)).start()
+                        except:
+                            print('Thread did not start.')
+                            traceback.print_exc()
+                else:
+                    return error('WrongServerTypeError',com)
             elif com[1].lower() == 'udp':
                 return print('Not done yet')
         elif com[0] == 'connect':
             if com[3].lower() == 'udp':
                 target_host = com[1]
+                if target_host == 'df': target_host = '0.0.0.0'
                 target_port = com[2]
                 client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
                 while True:
                     request = input('Send (exit): ')
                     if request == 'exit':
                         break
-                    client.sendto(request, (target_host, target_port))
-                    data, addr = client.recvfrom(4096) # asume [1] is addr
+                    client.senndall(request, (target_host, target_port)) # sendto a la base
+                    data, addr = client.recvfrom(1024)
                     print('Received: '+data)
                 client.close()
+            # TCP
             elif com[3].lower() == 'tcp':
                 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                client.connect((com[1], int(com[2])))
-                while True:
+                try:
+                    client.connect((com[1], int(com[2])))
+                except:
+                    print('Connection Error')
+                    client.close()
+                    return None
+                try:
+                    server_type = com[4]
+                except IndexError:
+                    server_type = 'base'
+                if server_type == 'base':
+                    server_info = client.recv(1024).decode('utf8')
+                    print('Server Info: '+server_info)
                     request = input('Send (exit) : ')
-                    if request == 'exit':
-                        break
-                    data = request.encode('utf-8')
-                    client.sendall(data)
-                    answer = client.recv(1024).decode('utf-8')
-                    print('Answer: '+answer)
-                client.close()
+                    while request != 'exit':
+                        client.sendall(request.encode('utf8'))
+                        answer = client.recv(5120).decode('utf8')
+                        if answer == '-':
+                            pass
+                        else:
+                            print('[*] Received: {} from Server'.format(answer))
+                        request = input('Send (exit) : ')
+                    client.sendall(b'exit')
+                elif server_type == 'send_spread':
+                    while True:
+                        request = input('Send (exit) : ')
+                        if request == 'exit':
+                            break
+                        data = request.encode('utf-8')
+                        client.sendall(data)
+                    client.close()
+                elif server_type == 'recv_spread':
+                    while True:
+                        t1 = time.perf_counter()
+                        if t1 > 5000: print('Waiting for data ...')
+                        data = client.recv(1024).decode('utf-8')
+                        print('Got: '+data)
+                    client.close()
+                elif server_type == 'auto_ex':
+                    path = com[5]
+                    try: sleep_time = int(com[6])
+                    except IndexError: sleep_time = .1
+                    while True:
+                        with open(path) as f:
+                            request = f.read()
+                            try:
+                                if request == last_request: time.sleep(sleep_time)
+                            except UnboundLocalError: pass
+                            if request != '':
+                                print('[*] Sending request of size {}'.format(sys.getsizeof(request)))
+                                client.sendall(request.encode('utf-8'))
+                            last_request = request[:]
+                            f.close()
+                    client.close()
+                else:
+                    raise 'Wrong Advanced Server Type'
             else:
                 return print('Invalid Client-type')
         # shortcuts
@@ -731,7 +954,7 @@ I hope you enjoy it
             return True
         elif com[0] == 'start':
             option = ' '
-            if len(com) > 4: return error('TooMuchArguments')
+            if len(com) > 4: return error('ArgumentError')
             if len(com) == 3: option = com[2]+' '
             print('STARTING')
             os.system('python'+option+com[1])
@@ -742,7 +965,7 @@ I hope you enjoy it
         elif com[0] == 'shortcut':
             ext = ['txt','bat','help']
             if com[1] in ext: return error('InvalidName',[com[1]])
-            if len(com) > 3: return error('TooMuchArguments')
+            if len(com) > 3: return error('ArgumentError')
             if len([let for let in com[1] if let not in string.ascii_letters+string.digits+'_'+'-']) != 0 or com[1] in com_list: return print('/!\\ Invalid Name')
             if com[2] not in shell_list: return print('/!\\ '+com[2]+' is not supported')
             else:
@@ -804,12 +1027,16 @@ I hope you enjoy it
             client.close()
         except:
             pass
-##    finally:
-##        print()
+
+# command temp
+# connect 192.168.178.134 123 TCP auto_ex /text_file.txt 5
+# server TCP df 123 5 infospread /root/python/lazyshell/data_handler.py hello world
 
 
 
-# main loop   lvl+'@'+
+
+
+# main loop
 while True:
     command = input(Green+user+Finish+' > \033[1;34m'+os.getcwd()+'\033[1;m # ')
     interpreter(command)
