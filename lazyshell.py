@@ -737,9 +737,9 @@ I hope you enjoy it
             f = open('/opt/lazyshell/data/log/scan.txt','w')
             f.write(scan)
             f.close()
-            devices = os.popen(" grep report /opt/xerosploit/tools/log/scan.txt | awk '{print $5}'").read()
-            devices_mac = os.popen("grep MAC /opt/xerosploit/tools/log/scan.txt | awk '{print $3}'").read() + os.popen("ip addr | grep 'state UP' -A1 | tail -n1 | awk '{print $2}' | cut -f1  -d'/'").read().upper() # get devices mac and localhost mac address
-            devices_name = os.popen("grep MAC /opt/xerosploit/tools/log/scan.txt | awk '{print $4 ,S$5 $6}'").read() + "\033[1;32m(This device)\033[1;m"
+            devices = os.popen(" grep report /opt/lazyshell/data/log/scan.txt | awk '{print $5}'").read()
+            devices_mac = os.popen("grep MAC /opt/lazyshell/data/log/scan.txt | awk '{print $3}'").read() + os.popen("ip addr | grep 'state UP' -A1 | tail -n1 | awk '{print $2}' | cut -f1  -d'/'").read().upper() # get devices mac and localhost mac address
+            devices_name = os.popen("grep MAC /opt/lazyshell/data/log/scan.txt | awk '{print $4 ,S$5 $6}'").read() + "\033[1;32m(This device)\033[1;m"
             table_data = [
 			    ['IP Address', 'Mac Address', 'Manufacturer'],
 			    [devices, devices_mac, devices_name]
