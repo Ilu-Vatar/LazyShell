@@ -39,7 +39,7 @@ print(""" \033[1;36m
 \033[1;m""")
 
 def main():
-    input("\033[1;34m\n[!!] The installation process is only for Linux environment.\nWindows or Mac computers won't support it. OK ?\033[1;m")
+    if sys.platform != 'linux': input("\033[1;34m\n[!!] The installation process is only for Linux environment.\nWindows or Mac computers won't support it. OK ?\033[1;m")
     print('Checking your Operating System ...')
     system0 = platform.system().lower()
     if system0 == 'windows' or system0 == 'darwin':
