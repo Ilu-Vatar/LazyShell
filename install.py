@@ -47,7 +47,7 @@ def main():
     qconn = input('Are you connected to the Internet ? [y/n] ')
     # installation
     print("\033[1;34m\n ---- Installing LazySehll ---- \033[1;m")
-    os.system("""mkdir /opt/lazyshell && cp lazyshell.py /opt/lazyshell/lazyshell.py && cp banner.py /opt/lazyshell/banner.py && mv data/lazy.sh /usr/bin/lazyshell && cp -r data /opt/lazyshell/data && chmod +x /usr/bin/lazyshell && echo "LazyShell has been successfully installed. Execute 'lazyshell' in your terminal"   """)
+    os.system("""mkdir /opt/lazyshell && cp lazyshell.py /opt/lazyshell/lazyshell.py && cp banner.py /opt/lazyshell/banner.py && cp data/lazy.sh /usr/bin/lazyshell && cp -r data /opt/lazyshell/data && chmod +x /usr/bin/lazyshell && echo "LazyShell has been successfully installed. Execute 'lazyshell' in your terminal"   """)
     print('Partially installed. You can already use it if you have "terminaltables" module installed')
     if qconn.lower() != 'n':
         os.system('apt update && apt install python3 -y && apt install net-tools -y && apt install nmap -y && apt install python-pip -y && pip install terminaltables && apt install git -y && apt install -f && echo Finished')
