@@ -10,7 +10,7 @@ import banner
 
 ################################################################################
 # variables
-version='0.2.7'
+version='0.3.0'
 user = open('/opt/lazyshell/data/files/user.txt','r').read()
 user = user.replace('\n','')
 starting_path = os.getcwd()
@@ -617,7 +617,7 @@ OTHER\n''']]
                 table_data = [['\n\n{}\n'.format(com[1].upper()),s+'\n']]
                 table = DoubleTable(table_data)
                 print('\n'+BrokenYellow+table.table+Finish)
-                print(Green+'[+] Type "help" + \'command\' to get the commands from the specified category\n'+Finish)
+                print(Green+'[+] Type "help" + \'command\' to get some help about the specified command\n'+Finish)
             elif com[1] == '--syntax':
                 print('All Avalaible Commands (syntax) :')
                 for command in com_list:
