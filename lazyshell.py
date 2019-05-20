@@ -76,8 +76,7 @@ else: os.system('cls') # windows
 wonder = banner.header()
 info = '''\033[1;30m            {~} A Terminal for Lazy people (by lazy people) {~}
             {~}               Version %s                 {~}
-            {~}        Created by: Valar/Ilu-Vatar          {~}
-            {~}           My Github: Ilu-Vatar              {~}
+            {~}     My Github: Nicolas-Reyland              {~}
             {~}          My Discord: neo#8489               {~}
             {~}         Type "help" to get some             {~}
             {~} ------------------------------------------- {~}
