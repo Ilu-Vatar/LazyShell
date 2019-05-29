@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 ################################################################################
 # Lazyshell
@@ -1037,7 +1037,10 @@ I hope you enjoy it
 
 # main loop
 while True:
-    command = input(Green+user+Finish+' > \033[1;34m'+os.getcwd()+'\033[1;m # ')
+    try:
+        command = input(Green+user+Finish+' > \033[1;34m'+os.getcwd()+'\033[1;m # ')
+    except EOFError:
+	sys.exit('exit')
     interpreter(command)
 
 
