@@ -285,7 +285,7 @@ def options(com):
         print('infospread >> you can add a python program/script that will handle the data (please handle empty data)\n'+
               ' as the first argument. All the arguments that follow can be specified after the script_path'+
               '\n If your script gives any output, it will be printed'+
-              '\n e.g. server TCP df 5201 infospread /folder/handler.py (here comes the data as argument (str)) arg1 arg2')
+              '\n e.g. server TCP df 5201 3 infospread /folder/handler.py (here comes the data as argument (str)) arg1 arg2')
     #elif com == 'proxy':
         #print('receive-first >>> True, False')
     elif com == 'portscan':
